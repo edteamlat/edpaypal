@@ -1,0 +1,12 @@
+# Execs
+edpaypal
+paypal
+
+# Certificates
+certificates
+
+# IDEs
+.idea/
+
+# Environment
+.env
