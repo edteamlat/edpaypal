@@ -136,8 +136,13 @@ func (i Invoice) scan(row postgres.RowScanner) (models.Invoice, error) {
 		return models.Invoice{}, err
 	}
 
-	invoice.ProductID = uuid.MustParse(productID.String)
-	invoice.SubscriptionID = uuid.MustParse(subscriptionID.String)
+	if productID.String != "" {
+		invoice.ProductID = uuid.MustParse(productID.String)
+	}
+	if subscriptionID.String != "" {
+		invoice.SubscriptionID = uuid.MustParse(subscriptionID.String)
+	}
+
 	invoice.UpdatedAt = updatedAtNull.Time
 
 	return invoice, nil
