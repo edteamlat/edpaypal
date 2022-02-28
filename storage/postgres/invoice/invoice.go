@@ -7,6 +7,7 @@ import (
 
 	"github.com/edteamlat/edpaypal/models"
 	"github.com/edteamlat/edpaypal/storage/postgres"
+	"github.com/google/uuid"
 )
 
 const (
@@ -32,6 +33,17 @@ func (i Invoice) Create(invoice *models.Invoice) error {
 	}
 	defer stmt.Close()
 
+	productID := sql.NullString{}
+	subscriptionID := sql.NullString{}
+	if invoice.ProductID != uuid.Nil {
+		productID.String = invoice.ProductID.String()
+		productID.Valid = true
+	}
+	if invoice.SubscriptionID != uuid.Nil {
+		subscriptionID.String = invoice.SubscriptionID.String()
+		subscriptionID.Valid = true
+	}
+
 	row, err := stmt.ExecContext(
 		emptyContext,
 		invoice.ID,
@@ -39,8 +51,8 @@ func (i Invoice) Create(invoice *models.Invoice) error {
 		invoice.Email,
 		invoice.IsProduct,
 		invoice.IsSubscription,
-		invoice.ProductID,
-		invoice.SubscriptionID,
+		productID,
+		subscriptionID,
 		invoice.Price,
 	)
 	if err != nil {
@@ -103,6 +115,8 @@ func (i Invoice) ByEmail(email string) (models.Invoices, error) {
 }
 
 func (i Invoice) scan(row postgres.RowScanner) (models.Invoice, error) {
+	productID := sql.NullString{}
+	subscriptionID := sql.NullString{}
 	updatedAtNull := sql.NullTime{}
 	invoice := models.Invoice{}
 
@@ -112,8 +126,8 @@ func (i Invoice) scan(row postgres.RowScanner) (models.Invoice, error) {
 		&invoice.Email,
 		&invoice.IsProduct,
 		&invoice.IsSubscription,
-		&invoice.ProductID,
-		&invoice.SubscriptionID,
+		&productID,
+		&subscriptionID,
 		&invoice.Price,
 		&invoice.CreatedAt,
 		&updatedAtNull,
@@ -122,6 +136,8 @@ func (i Invoice) scan(row postgres.RowScanner) (models.Invoice, error) {
 		return models.Invoice{}, err
 	}
 
+	invoice.ProductID = uuid.MustParse(productID.String)
+	invoice.SubscriptionID = uuid.MustParse(subscriptionID.String)
 	invoice.UpdatedAt = updatedAtNull.Time
 
 	return invoice, nil
